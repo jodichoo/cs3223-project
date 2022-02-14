@@ -73,19 +73,19 @@ class TablePlanner {
      Predicate joinpred = mypred.joinSubPred(myschema, currsch);
      if (joinpred == null)
         return null;
-//      Plan p = makeIndexJoin(current, currsch);
-//      // compare recordsOutput()
-//      if (p == null) {
-//         Plan prod = makeProductJoin(current, currsch);
-//      	 Plan sortMerge = makeMergeJoin(current, currsch); 
-//      	 if (prod.recordsOutput() > sortMerge.recordsOutput()) {	
-//      		 p = sortMerge;
-//      	 } else {
-//      		 p = prod; 
-//      	 }
-//      }
-//      return p;
-      return makeMergeJoin(current, currsch);
+     Plan p = makeIndexJoin(current, currsch);
+     // compare recordsOutput()
+     if (p == null) {
+        Plan prod = makeProductJoin(current, currsch);
+     	 Plan sortMerge = makeMergeJoin(current, currsch);
+     	 if (prod.recordsOutput() > sortMerge.recordsOutput()) {
+     		 p = sortMerge;
+     	 } else {
+     		 p = prod;
+     	 }
+     }
+     return p;
+      // return makeMergeJoin(current, currsch);
    }
    
    /**
@@ -134,16 +134,19 @@ class TablePlanner {
    private Plan makeMergeJoin(Plan current, Schema currsch) {
 	  // process pred here 
 	  Predicate subPred = mypred.joinSubPred(currsch, myschema);
-	  String[] fields = getFields(subPred);
+	  String[] fields = getFields(subPred, currsch);
       System.out.println(Arrays.toString(fields));
 	  Plan p = new MergeJoinPlan(tx, current, myplan, fields[0], fields[1]); 
 	  return addJoinPred(p, currsch);
    }
 
-   private String[] getFields(Predicate subPred) {
+   private String[] getFields(Predicate subPred, Schema currSchema) {
       Term t = subPred.getFirst();
       // TODO check for order of fields (might mismatch field1, field2)
-      return new String[] {t.getLhs().asFieldName(), t.getRhs().asFieldName()};
+      if (t.getLhs().appliesTo(currSchema)) {
+         return new String[] {t.getLhs().asFieldName(), t.getRhs().asFieldName()};
+      }
+      return new String[] {t.getRhs().asFieldName(), t.getLhs().asFieldName()};
    }
    
    private Plan addSelectPred(Plan p) {
