@@ -8,6 +8,7 @@ import simpledb.metadata.*;
 import simpledb.index.planner.*;
 import simpledb.multibuffer.MultibufferProductPlan;
 import simpledb.plan.*;
+import simpledb.materialize.*;
 
 /**
  * This class contains methods for planning a single table.
@@ -61,13 +62,22 @@ class TablePlanner {
     */
    public Plan makeJoinPlan(Plan current) {
       Schema currsch = current.schema();
-      Predicate joinpred = mypred.joinSubPred(myschema, currsch);
-      if (joinpred == null)
-         return null;
-      Plan p = makeIndexJoin(current, currsch);
-      if (p == null)
-         p = makeProductJoin(current, currsch);
-      return p;
+//      Predicate joinpred = mypred.joinSubPred(myschema, currsch);
+//      if (joinpred == null)
+//         return null;
+//      Plan p = makeIndexJoin(current, currsch);
+//      // compare recordsOutput()
+//      if (p == null) {
+//         Plan prod = makeProductJoin(current, currsch);
+//      	 Plan sortMerge = makeMergeJoin(current, currsch); 
+//      	 if (prod.recordsOutput() > sortMerge.recordsOutput()) {	
+//      		 p = sortMerge;
+//      	 } else {
+//      		 p = prod; 
+//      	 }
+//      }
+//      return p;
+      return makeMergeJoin(current, currsch);
    }
    
    /**
@@ -80,6 +90,7 @@ class TablePlanner {
       Plan p = addSelectPred(myplan);
       return new MultibufferProductPlan(tx, current, p);
    }
+   
    
    private Plan makeIndexSelect() {
       for (String fldname : indexes.keySet()) {
@@ -97,6 +108,7 @@ class TablePlanner {
       for (String fldname : indexes.keySet()) {
          String outerfield = mypred.equatesWithField(fldname);
          if (outerfield != null && currsch.hasField(outerfield)) {
+        	 System.out.println("in if statement"); 
             IndexInfo ii = indexes.get(fldname);
             Plan p = new IndexJoinPlan(current, myplan, ii, outerfield);
             p = addSelectPred(p);
@@ -109,6 +121,14 @@ class TablePlanner {
    private Plan makeProductJoin(Plan current, Schema currsch) {
       Plan p = makeProductPlan(current);
       return addJoinPred(p, currsch);
+   }
+   
+   private Plan makeMergeJoin(Plan current, Schema currsch) {
+	  // process pred here 
+	  Predicate subPred = mypred.joinSubPred(currsch, myschema);
+	  String[] fields = getFields(subPred); 
+	  Plan p = new MergeJoinPlan(tx, current, myplan, fields[0], fields[1]); 
+	  return addJoinPred(p, currsch);
    }
    
    private Plan addSelectPred(Plan p) {
@@ -125,5 +145,10 @@ class TablePlanner {
          return new SelectPlan(p, joinpred);
       else
          return p;
+   }
+   
+   private String[] getFields(Predicate p) {
+	   Term t = p.getFirst();
+	   return new String[] {t.getLhs().asFieldName(), t.getRhs().asFieldName()}; 
    }
 }

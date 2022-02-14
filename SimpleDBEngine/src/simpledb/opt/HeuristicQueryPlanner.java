@@ -79,7 +79,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
    private Plan getLowestJoinPlan(Plan current) {
       TablePlanner besttp = null;
       Plan bestplan = null;
-      for (TablePlanner tp : tableplanners) {
+      for (TablePlanner tp : tableplanners) { 
          Plan plan = tp.makeJoinPlan(current);
          if (plan != null && (bestplan == null || plan.recordsOutput() < bestplan.recordsOutput())) {
             besttp = tp;

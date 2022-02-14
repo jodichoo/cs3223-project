@@ -146,4 +146,8 @@ public class Predicate {
          result += " and " + iter.next().toString();
       return result;
    }
+   
+   public Term getFirst() {
+	   return terms.get(0); 
+   }
 }
