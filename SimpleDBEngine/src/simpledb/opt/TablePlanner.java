@@ -1,14 +1,22 @@
 package simpledb.opt;
 
+import java.util.Arrays;
 import java.util.Map;
-import simpledb.tx.Transaction;
-import simpledb.record.*;
-import simpledb.query.*;
-import simpledb.metadata.*;
-import simpledb.index.planner.*;
+
+import simpledb.index.planner.IndexJoinPlan;
+import simpledb.index.planner.IndexSelectPlan;
+import simpledb.materialize.MergeJoinPlan;
+import simpledb.metadata.IndexInfo;
+import simpledb.metadata.MetadataMgr;
 import simpledb.multibuffer.MultibufferProductPlan;
-import simpledb.plan.*;
-import simpledb.materialize.*;
+import simpledb.plan.Plan;
+import simpledb.plan.SelectPlan;
+import simpledb.plan.TablePlan;
+import simpledb.query.Constant;
+import simpledb.query.Predicate;
+import simpledb.query.Term;
+import simpledb.record.Schema;
+import simpledb.tx.Transaction;
 
 /**
  * This class contains methods for planning a single table.
@@ -62,9 +70,9 @@ class TablePlanner {
     */
    public Plan makeJoinPlan(Plan current) {
       Schema currsch = current.schema();
-//      Predicate joinpred = mypred.joinSubPred(myschema, currsch);
-//      if (joinpred == null)
-//         return null;
+     Predicate joinpred = mypred.joinSubPred(myschema, currsch);
+     if (joinpred == null)
+        return null;
 //      Plan p = makeIndexJoin(current, currsch);
 //      // compare recordsOutput()
 //      if (p == null) {
@@ -126,9 +134,16 @@ class TablePlanner {
    private Plan makeMergeJoin(Plan current, Schema currsch) {
 	  // process pred here 
 	  Predicate subPred = mypred.joinSubPred(currsch, myschema);
-	  String[] fields = getFields(subPred); 
+	  String[] fields = getFields(subPred);
+      System.out.println(Arrays.toString(fields));
 	  Plan p = new MergeJoinPlan(tx, current, myplan, fields[0], fields[1]); 
 	  return addJoinPred(p, currsch);
+   }
+
+   private String[] getFields(Predicate subPred) {
+      Term t = subPred.getFirst();
+      // TODO check for order of fields (might mismatch field1, field2)
+      return new String[] {t.getLhs().asFieldName(), t.getRhs().asFieldName()};
    }
    
    private Plan addSelectPred(Plan p) {
@@ -146,9 +161,5 @@ class TablePlanner {
       else
          return p;
    }
-   
-   private String[] getFields(Predicate p) {
-	   Term t = p.getFirst();
-	   return new String[] {t.getLhs().asFieldName(), t.getRhs().asFieldName()}; 
-   }
+
 }

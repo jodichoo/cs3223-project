@@ -1,6 +1,7 @@
 package simpledb.materialize;
 
-import simpledb.query.*;
+import simpledb.query.Constant;
+import simpledb.query.Scan;
 
 /**
  * The Scan class for the <i>mergejoin</i> operator.
@@ -36,7 +37,7 @@ public class MergeJoinScan implements Scan {
       s2.close();
    }
    
-  /**
+   /**
     * Position the scan before the first record,
     * by positioning each underlying scan before
     * their first records.
@@ -62,11 +63,11 @@ public class MergeJoinScan implements Scan {
     */
    public boolean next() {
       boolean hasmore2 = s2.next();
-      if (hasmore2 && s2.getVal(fldname2).equals(joinval))
+      if (hasmore2 && joinval != null && s2.getVal(fldname2).equals(joinval))
          return true;
       
       boolean hasmore1 = s1.next();
-      if (hasmore1 && s1.getVal(fldname1).equals(joinval)) {
+      if (hasmore1 && joinval != null && s1.getVal(fldname1).equals(joinval)) {
          s2.restorePosition();
          return true;
       }
@@ -81,6 +82,7 @@ public class MergeJoinScan implements Scan {
          else {
             s2.savePosition();
             joinval  = s2.getVal(fldname2);
+             System.out.println(joinval);
             return true;
          }
       }
