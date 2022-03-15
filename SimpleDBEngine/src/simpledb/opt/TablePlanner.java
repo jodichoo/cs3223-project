@@ -83,6 +83,9 @@ class TablePlanner {
       Plan p;
       Plan bnl = makeBlockNestedLoopJoin(current, currsch);
       Plan index = makeIndexJoin(current, currsch);
+      if (index != null) {
+    	  return index;
+      }
       Plan sortMerge = makeMergeJoin(current, currsch);
       Plan hash = makeHashJoin(current, currsch);
 
@@ -95,21 +98,13 @@ class TablePlanner {
 //      if (index != null) System.out.println("index: " + index.blocksAccessed());
 //      System.out.println("sort-merge: " + sortMerge.blocksAccessed());
 //      System.out.println("hash join: " + hash.blocksAccessed());
-      
       p = bnl;
-      if (index != null && p.blocksAccessed() > index.blocksAccessed()) {
-         p = index;
-      }
       if (p.blocksAccessed() > hash.blocksAccessed()) {
          p = hash;
       }
       if (p.blocksAccessed() > sortMerge.blocksAccessed()) {
          p = sortMerge;
       }
-<<<<<<< Updated upstream
-      // p = bnl;
-=======
->>>>>>> Stashed changes
       return p;
    }
 
