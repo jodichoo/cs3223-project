@@ -106,7 +106,10 @@ class TablePlanner {
       if (p.blocksAccessed() > sortMerge.blocksAccessed()) {
          p = sortMerge;
       }
+<<<<<<< Updated upstream
       // p = bnl;
+=======
+>>>>>>> Stashed changes
       return p;
    }
 

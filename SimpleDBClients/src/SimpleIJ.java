@@ -23,13 +23,17 @@ public class SimpleIJ {
          while (sc.hasNextLine()) {
             // process one line of input
             String cmd = sc.nextLine().trim();
-            if (cmd.startsWith("exit"))
+            if (cmd.startsWith("exit")) {
                break;
-            else if (cmd.startsWith("select"))
-               doQuery(stmt, cmd);
-            else
+            } else if (cmd.startsWith("select")) {
+//            	long startTime = System.currentTimeMillis();
+            	doQuery(stmt, cmd);
+//	            long endTime = System.currentTimeMillis();
+//	            System.out.println("\nThis query took " + (endTime - startTime) + " milliseconds");
+            } else {
                doUpdate(stmt, cmd);
-            System.out.print("\nSQL> ");
+               System.out.print("\nSQL> ");
+            }
          }
       }
       catch (SQLException e) {
@@ -39,7 +43,9 @@ public class SimpleIJ {
    }
 
    private static void doQuery(Statement stmt, String cmd) {
+	  long startTime = System.currentTimeMillis();
       try (ResultSet rs = stmt.executeQuery(cmd)) {
+    	 long endTime = System.currentTimeMillis();
          ResultSetMetaData md = rs.getMetaData();
          int numcols = md.getColumnCount();
          int totalwidth = 0;
@@ -74,6 +80,8 @@ public class SimpleIJ {
             }
             System.out.println();
          }
+         System.out.println("\nThis query took " + (endTime - startTime) + " milliseconds");
+
       }
       catch (SQLException e) {
          e.printStackTrace();
